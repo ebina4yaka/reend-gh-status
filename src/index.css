@@ -1,0 +1,145 @@
+@import "tailwindcss";
+@import "reend-components/variables.css";
+@import "reend-components/utilities.css";
+
+/* Component classes live inside the package — scan them too. */
+@source "../node_modules/reend-components/dist/**/*.{js,mjs}";
+
+/* Map ReEnd design tokens (HSL triplets) to Tailwind v4 color utilities.
+   Mirrors the library's v3 preset (reend-components/tailwind). */
+@theme inline {
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+  --color-border: hsl(var(--border));
+  --color-border-strong: hsl(var(--border-strong));
+  --color-border-accent: hsl(var(--border-accent));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+  --color-surface-canvas: hsl(var(--surface-canvas));
+  --color-surface-0: hsl(var(--surface-0));
+  --color-surface-1: hsl(var(--surface-1));
+  --color-surface-2: hsl(var(--surface-2));
+  --color-surface-3: hsl(var(--surface-3));
+  --color-surface-hover: hsl(var(--surface-hover));
+  --color-surface-active: hsl(var(--surface-active));
+  --color-ef-yellow: hsl(var(--ef-yellow));
+  --color-ef-blue: hsl(var(--ef-blue));
+  --color-ef-cyan: hsl(var(--ef-cyan));
+  --color-ef-red: hsl(var(--ef-red));
+  --color-ef-green: hsl(var(--ef-green));
+  --color-ef-orange: hsl(var(--ef-orange));
+  --color-ef-purple: hsl(var(--ef-purple));
+  --color-ef-gray-mid: hsl(var(--ef-gray-mid));
+
+  /* ReEnd のオーバーレイ系コンポーネントが使う名前付き z-index。Tailwind v4 に
+     z-index のテーマ namespace は無いため --z-* を並べるだけではユーティリティが
+     生成されない — @utility で明示的に定義する（これが無いと Dialog のオーバーレイ
+     が z-index 無しになり z-10 の sticky ヘッダーがオーバーレイの上に浮く）。 */
+  /* ReEnd の角半径スケール（0-4px、ターミナル美学）に Tailwind の rounded-* を
+     マッピング。rounded-lg のデフォルト 8px はテーマの意図より丸いため
+     --radius-md (4px) に抑える。rounded-full は影響を受けない。 */
+  --radius: var(--radius-sm);
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-md);
+  --animate-dialog-in: dialog-in 0.3s var(--ease-default, ease) forwards;
+  --animate-fade-in: fadeIn 0.3s ease forwards;
+}
+
+@utility z-raised {
+  z-index: var(--z-raised);
+}
+@utility z-sticky {
+  z-index: var(--z-sticky);
+}
+@utility z-header {
+  z-index: var(--z-header);
+}
+@utility z-overlay {
+  z-index: var(--z-overlay);
+}
+@utility z-modal {
+  z-index: var(--z-modal);
+}
+@utility z-tooltip {
+  z-index: var(--z-tooltip);
+}
+@utility z-max {
+  z-index: var(--z-max);
+}
+
+/* 入力欄ボーダー。WCAG 1.4.11 の 3:1 には届かないが、ダーク 20% はターミナル美学の
+   妥協点（3:1 には ~40% 灰が必要で美学を壊す）。ライト 35% は白カード上で field
+   境界が消えてしまうため強めにしている（≈2.3:1）。
+   あわせてダークのカード/divider が背景に沈みすぎないよう border を 6% → 10% に、
+   ライトは 10% → 14% に引き上げた。 */
+/* color-scheme はネイティブ UI（スクロールバー・フォーム・フォーカスリング）を
+   テーマに追従させる。未指定だと UA がライト色で描画する。 */
+:root {
+  color-scheme: dark;
+  --input: 0 0% 100% / 0.2;
+  --border: 0 0% 100% / 0.1;
+}
+.light {
+  color-scheme: light;
+  --input: 0 0% 0% / 0.35;
+  --border: 0 0% 0% / 0.14;
+  /* ライトのアンバー（42 90% 42%）は白文字・白カード上で 2.75:1 しかない。
+     L=30% のダークゴールドなら白文字ボタン・テキスト装飾とも 5.0:1 を満たす。 */
+  --primary: 42 90% 30%;
+  --primary-foreground: 0 0% 100%;
+  --accent-foreground: 42 90% 30%;
+  --ring: 42 90% 30%;
+}
+
+/* Body font: Noto Sans JP（Latin もカバー。単一フォントで統一）。
+   The library's .font-body stack references Source Han Sans / Noto Sans SC,
+   which are never loaded — replace with the fonts we actually ship so CJK
+   text doesn't silently fall through to a system font. */
+.font-body {
+  font-family: "Noto Sans JP", sans-serif;
+}
+
+/* ReEnd の Dropdown は Content に role="menu" を持たないため [role=menu] では
+   拾えない。開いたときの UA focus リング（ダークでは白）が浮くので、コンテナ配下の
+   フォーカスを primary 系のハイライトに揃える。 */
+.z-dropdown :focus,
+.z-dropdown :focus-visible {
+  background-color: hsl(var(--primary) / 0.08);
+  color: hsl(var(--primary));
+  outline: 1px solid hsl(var(--primary) / 0.6);
+  outline-offset: -1px;
+}
+
+/* 減速モード: ダイアログのアニメーションを無効化しつつ中央寄せを維持する。
+   dialog-in の `to` が translate(-50%,-50%) の中央寄せを担っているため、
+   単に animation:none にすると位置が崩れる。from == to に潰して瞬時に確定させる。 */
+@media (prefers-reduced-motion: reduce) {
+  @keyframes dialog-in {
+    from,
+    to {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1);
+    }
+  }
+  @keyframes fadeIn {
+    from,
+    to {
+      opacity: 1;
+    }
+  }
+}

@@ -1,0 +1,20 @@
+node_modules/
+dist/
+result
+result-*
+*.local
+.DS_Store
+
+# Better Auth (SQLite)
+*.db
+*.db-journal
+
+# Tool/runtime caches
+.tanstack/
+.agents/
+
+# Storybook (build output)
+storybook-static/
+
+# SchemaSpy (build output)
+schema-docs/

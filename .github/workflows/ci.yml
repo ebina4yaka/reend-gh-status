@@ -1,0 +1,76 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: DeterminateSystems/nix-installer-action@v22
+
+      - name: Install project toolchain
+        run: |
+          nix profile add .
+          echo "$HOME/.nix-profile/bin" >> "$GITHUB_PATH"
+
+      - run: bun install --frozen-lockfile
+
+      - name: Format check
+        run: bun run fmt:check
+
+      - name: Lint
+        run: bun run lint
+
+      - name: Text lint (Japanese prose)
+        run: bun run lint:text
+
+      - name: Type check
+        run: bun run check
+
+      - name: Knip (unused exports/deps)
+        run: bun run knip
+
+      - name: Test
+        run: bun test
+
+  deploy:
+    needs: ci
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      deployments: write
+    environment:
+      name: dev
+      deployment: true
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: DeterminateSystems/nix-installer-action@v22
+
+      - name: Install project toolchain
+        run: |
+          nix profile add .
+          echo "$HOME/.nix-profile/bin" >> "$GITHUB_PATH"
+
+      - run: bun install --frozen-lockfile
+
+      - name: Build frontend
+        run: bun run build
+
+      - name: Deploy to Cloudflare Workers
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          environment: develop
+          secrets: |
+            GITHUB_TOKEN
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_STATS_TOKEN }}

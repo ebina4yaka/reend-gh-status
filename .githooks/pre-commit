@@ -1,0 +1,17 @@
+#!/bin/sh
+# ステージされたファイルを整形し、lint エラーがあればコミットを止める
+set -e
+cd "$(git rev-parse --show-toplevel)"
+
+files=$(git diff --cached --name-only --diff-filter=ACMR | grep -E '\.(ts|tsx|js|jsx|css)$' || true)
+[ -z "$files" ] && exit 0
+
+bunx oxfmt $files
+git add $files # 整形結果をステージし直す
+
+# ponytail: oxlint --fix は危険な修正も混ざるため check のみ。自動修正したければ --fix を追加
+# oxlint は JS/TS のみ対象（CSS のみだと "No files found" で exit 1 する）
+jsfiles=$(printf '%s\n' $files | grep -E '\.(ts|tsx|js|jsx)$' || true)
+if [ -n "$jsfiles" ]; then
+  bunx oxlint $jsfiles
+fi
