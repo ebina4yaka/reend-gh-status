@@ -1,10 +1,4 @@
-import type {
-  ActivityResponse,
-  ContributionsResponse,
-  ReposResponse,
-  StatsResponse,
-  TopLangsResponse,
-} from "@/server/app";
+import { fixtureSnapshot } from "@/server/github/fixture";
 import { type GithubSnapshot, emptySnapshot } from "@/shared/github";
 
 /**
@@ -12,8 +6,7 @@ import { type GithubSnapshot, emptySnapshot } from "@/shared/github";
  * ストーリーは setApiScenario でスナップショットを差し替える。
  */
 
-// シナリオ（ストーリーが setApiScenario で差し替える）。ban-let 対策で可変オブジェクト。
-const mockState: { snapshot: GithubSnapshot } = { snapshot: emptySnapshot() };
+const mockState: { snapshot: GithubSnapshot } = { snapshot: fixtureSnapshot() };
 
 /** ストーリーから API シナリオを差し替える。 */
 export function setApiScenario(snapshot: GithubSnapshot): void {
@@ -25,39 +18,29 @@ export function resetMocks(): void {
   mockState.snapshot = emptySnapshot();
 }
 
-// 成功レスポンス（Eden は { data, error } を返し、成功時 error は undefined）。
-interface EdenResult<TPayload> {
-  readonly data: TPayload;
+interface SnapshotQueryResult {
+  readonly data: {
+    readonly data: GithubSnapshot;
+    readonly fetchedAt: string;
+    readonly status: "ok";
+  };
   readonly error?: never;
-}
-
-function ok<TPayload extends object>(payload: TPayload): EdenResult<TPayload> {
-  return { data: payload };
 }
 
 interface ApiTree {
   readonly api: {
-    readonly activity: { readonly GET: () => Promise<EdenResult<ActivityResponse>> };
-    readonly contributions: { readonly GET: () => Promise<EdenResult<ContributionsResponse>> };
-    readonly repos: { readonly GET: () => Promise<EdenResult<ReposResponse>> };
-    readonly stats: { readonly GET: () => Promise<EdenResult<StatsResponse>> };
-    readonly topLangs: { readonly GET: () => Promise<EdenResult<TopLangsResponse>> };
+    readonly snapshot: {
+      readonly QUERY: () => Promise<SnapshotQueryResult>;
+    };
   };
 }
 
 export const api: ApiTree = {
   api: {
-    activity: {
-      GET: async (): Promise<EdenResult<ActivityResponse>> => ok(mockState.snapshot.activity),
-    },
-    contributions: {
-      GET: async (): Promise<EdenResult<ContributionsResponse>> =>
-        ok(mockState.snapshot.contributions),
-    },
-    repos: { GET: async (): Promise<EdenResult<ReposResponse>> => ok(mockState.snapshot.repos) },
-    stats: { GET: async (): Promise<EdenResult<StatsResponse>> => ok(mockState.snapshot.stats) },
-    topLangs: {
-      GET: async (): Promise<EdenResult<TopLangsResponse>> => ok(mockState.snapshot.languages),
+    snapshot: {
+      QUERY: async (): Promise<SnapshotQueryResult> => ({
+        data: { data: mockState.snapshot, fetchedAt: "2026-09-17T18:00:00Z", status: "ok" },
+      }),
     },
   },
 };
