@@ -62,7 +62,7 @@ export interface ContributionsData {
   readonly weeks: readonly (readonly ContributionDay[])[];
 }
 
-export type ActivityKind = "commit" | "issue" | "pull-request" | "release" | "other";
+export type ActivityKind = "comment" | "commit" | "issue" | "pull-request" | "release" | "other";
 
 export interface ActivityItem {
   readonly createdAt: string;

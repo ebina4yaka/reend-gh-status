@@ -17,7 +17,12 @@ export function toReposData(repos: readonly RepoNodePayload[], login: string): R
       stars: repo.stargazerCount,
       url: `https://github.com/${login}/${repo.name}`,
     }))
-    .toSorted((left, right) => right.stars - left.stars)
+    .toSorted((left, right) =>
+      // スター同点は最近 push した順に並べる（カードの上位 4 件を有用にする）。
+      right.stars === left.stars
+        ? right.pushedAt.localeCompare(left.pushedAt)
+        : right.stars - left.stars,
+    )
     .slice(0, MAX_REPOS);
   return { items };
 }

@@ -21,6 +21,9 @@ function kindStyle(kind: ActivityKind, tokens: CardTokens): { code: string; tone
   if (kind === "issue") {
     return { code: "IS", tone: tokens.orange };
   }
+  if (kind === "comment") {
+    return { code: "IC", tone: tokens.cyan };
+  }
   if (kind === "release") {
     return { code: "RL", tone: tokens.blue };
   }
@@ -35,7 +38,6 @@ function ActivityRow(props: {
   readonly tokens: CardTokens;
 }): ReactElement {
   const style: { code: string; tone: string } = kindStyle(props.item.kind, props.tokens);
-  const title: string = props.item.count > 1 ? `${props.item.title}` : props.item.title;
   return (
     <div style={{ alignItems: "center", display: "flex", gap: 8, width: "100%" }}>
       <span
@@ -67,7 +69,7 @@ function ActivityRow(props: {
             whiteSpace: "nowrap",
           }}
         >
-          {title}
+          {props.item.title}
         </span>
         <Label tokens={props.tokens}>{props.item.repo}</Label>
       </div>

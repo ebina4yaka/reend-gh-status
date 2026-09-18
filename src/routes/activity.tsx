@@ -9,6 +9,7 @@ import type { ActivityItem, ActivityKind } from "@/shared/github";
 export const Route = createFileRoute("/activity")({ component: ActivityPage });
 
 const KIND_LABELS: Readonly<Record<ActivityKind, string>> = {
+  comment: "COMMENT",
   commit: "COMMIT",
   issue: "ISSUE",
   other: "EVENT",

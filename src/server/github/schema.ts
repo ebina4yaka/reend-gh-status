@@ -2,17 +2,17 @@ import * as valibot from "valibot";
 
 /**
  * GitHub API の応答を valibot で検証するスキーマ。
- * GraphQL は欠落フィールドを null で返すため、optional の既定値で
- * null を吸収し、この先のコードへ null を持ち込まない。
+ * GraphQL は欠落フィールドを null で返す。nullish の既定値で null を吸収し、
+ * この先のコードへ null を持ち込まない（optional は null を受け付けない）。
  */
 
 const LanguageNodeSchema = valibot.object({
-  color: valibot.optional(valibot.string(), ""),
+  color: valibot.nullish(valibot.string(), ""),
   name: valibot.string(),
 });
 
 const RepoNodeSchema = valibot.object({
-  description: valibot.optional(valibot.string(), ""),
+  description: valibot.nullish(valibot.string(), ""),
   forkCount: valibot.number(),
   isArchived: valibot.boolean(),
   languages: valibot.object({
@@ -24,8 +24,8 @@ const RepoNodeSchema = valibot.object({
     ),
   }),
   name: valibot.string(),
-  primaryLanguage: valibot.optional(LanguageNodeSchema, { color: "", name: "" }),
-  pushedAt: valibot.string(),
+  primaryLanguage: valibot.nullish(LanguageNodeSchema, { color: "", name: "" }),
+  pushedAt: valibot.nullish(valibot.string(), ""),
   stargazerCount: valibot.number(),
 });
 
@@ -33,7 +33,7 @@ export type RepoNodePayload = valibot.InferOutput<typeof RepoNodeSchema>;
 
 const ContributionDaySchema = valibot.object({
   contributionCount: valibot.number(),
-  contributionLevel: valibot.optional(valibot.string(), "NONE"),
+  contributionLevel: valibot.nullish(valibot.string(), "NONE"),
   date: valibot.string(),
 });
 
@@ -48,7 +48,7 @@ const ContributionsCollectionSchema = valibot.object({
       }),
     ),
   }),
-  restrictedContributionsCount: valibot.optional(valibot.number(), 0),
+  restrictedContributionsCount: valibot.nullish(valibot.number(), 0),
   totalCommitContributions: valibot.number(),
   totalIssueContributions: valibot.number(),
   totalPullRequestContributions: valibot.number(),
@@ -62,14 +62,14 @@ export type ContributionsCollectionPayload = valibot.InferOutput<
 const CountSchema = valibot.object({ totalCount: valibot.number() });
 
 const GithubUserSchema = valibot.object({
-  avatarUrl: valibot.optional(valibot.string(), ""),
+  avatarUrl: valibot.nullish(valibot.string(), ""),
   contributionsCollection: ContributionsCollectionSchema,
   followers: CountSchema,
   following: CountSchema,
   issues: CountSchema,
   login: valibot.string(),
   mergedPullRequests: CountSchema,
-  name: valibot.optional(valibot.string(), ""),
+  name: valibot.nullish(valibot.string(), ""),
   repositories: valibot.object({
     nodes: valibot.array(RepoNodeSchema),
     totalCount: valibot.number(),
@@ -79,17 +79,17 @@ const GithubUserSchema = valibot.object({
 export type GithubUserPayload = valibot.InferOutput<typeof GithubUserSchema>;
 
 export const GraphqlEnvelopeSchema = valibot.object({
-  data: valibot.optional(
+  data: valibot.nullish(
     valibot.object({
-      user: valibot.optional(GithubUserSchema),
+      user: valibot.nullish(GithubUserSchema),
     }),
     {},
   ),
-  errors: valibot.optional(
+  errors: valibot.nullish(
     valibot.array(
       valibot.object({
-        message: valibot.optional(valibot.string(), ""),
-        type: valibot.optional(valibot.string(), ""),
+        message: valibot.nullish(valibot.string(), ""),
+        type: valibot.nullish(valibot.string(), ""),
       }),
     ),
     [],
@@ -98,39 +98,39 @@ export const GraphqlEnvelopeSchema = valibot.object({
 
 /** REST /users/:login/events/public の 1 要素（必要な範囲だけ検証する）。 */
 const EventSchema = valibot.looseObject({
-  created_at: valibot.optional(valibot.string(), ""),
+  created_at: valibot.nullish(valibot.string(), ""),
   id: valibot.string(),
-  payload: valibot.optional(
+  payload: valibot.nullish(
     valibot.looseObject({
-      action: valibot.optional(valibot.string(), ""),
-      commits: valibot.optional(valibot.array(valibot.unknown()), []),
-      issue: valibot.optional(
+      action: valibot.nullish(valibot.string(), ""),
+      commits: valibot.nullish(valibot.array(valibot.unknown()), []),
+      issue: valibot.nullish(
         valibot.looseObject({
-          number: valibot.optional(valibot.number(), 0),
-          title: valibot.optional(valibot.string(), ""),
+          number: valibot.nullish(valibot.number(), 0),
+          title: valibot.nullish(valibot.string(), ""),
         }),
         {},
       ),
-      pull_request: valibot.optional(
+      pull_request: valibot.nullish(
         valibot.looseObject({
-          number: valibot.optional(valibot.number(), 0),
-          title: valibot.optional(valibot.string(), ""),
+          number: valibot.nullish(valibot.number(), 0),
+          title: valibot.nullish(valibot.string(), ""),
         }),
         {},
       ),
-      ref: valibot.optional(valibot.string(), ""),
-      release: valibot.optional(
+      ref: valibot.nullish(valibot.string(), ""),
+      release: valibot.nullish(
         valibot.looseObject({
-          tag_name: valibot.optional(valibot.string(), ""),
+          tag_name: valibot.nullish(valibot.string(), ""),
         }),
         {},
       ),
-      size: valibot.optional(valibot.number(), 0),
+      size: valibot.nullish(valibot.number(), 0),
     }),
     {},
   ),
-  repo: valibot.optional(valibot.object({ name: valibot.optional(valibot.string(), "") }), {}),
-  type: valibot.optional(valibot.string(), ""),
+  repo: valibot.nullish(valibot.object({ name: valibot.nullish(valibot.string(), "") }), {}),
+  type: valibot.nullish(valibot.string(), ""),
 });
 
 export type GithubEventPayload = valibot.InferOutput<typeof EventSchema>;

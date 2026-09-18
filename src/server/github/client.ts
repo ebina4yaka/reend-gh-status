@@ -58,6 +58,17 @@ export function describeFailure(failure: GithubFailure): {
   return { message: `GitHub が ${String(failure.status)} を返しました。`, reason: "github-error" };
 }
 
+/** 最初の issue を「パス: メッセージ」の形にする（原因の特定用）。 */
+function describeIssues(issues: readonly valibot.BaseIssue<unknown>[]): string {
+  return Maybe.of(issues[0]).match<string>({
+    Just: (first): string => {
+      const path: string = (first.path ?? []).map((item) => String(item.key)).join(".");
+      return `${path === "" ? "(root)" : path}: ${first.message}`;
+    },
+    Nothing: (): string => "schema",
+  });
+}
+
 function isRateLimited(response: Response): boolean {
   const remaining: string = response.headers.get("x-ratelimit-remaining") ?? "";
   return response.status === 429 || (response.status === 403 && remaining === "0");
@@ -145,7 +156,7 @@ export async function fetchCore(
     json.value,
   );
   if (!parsed.success) {
-    return Result.err({ kind: "invalid-payload", message: parsed.issues[0]?.message ?? "schema" });
+    return Result.err({ kind: "invalid-payload", message: describeIssues(parsed.issues) });
   }
   const user: Maybe<GithubUserPayload> = Maybe.of(parsed.output.data.user);
   if (user.isNothing) {
@@ -191,7 +202,7 @@ export async function fetchActivity(
     json.value,
   );
   if (!parsed.success) {
-    return Result.err({ kind: "invalid-payload", message: parsed.issues[0]?.message ?? "schema" });
+    return Result.err({ kind: "invalid-payload", message: describeIssues(parsed.issues) });
   }
   return Result.ok(parsed.output);
 }
