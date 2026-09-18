@@ -23,6 +23,24 @@ function getCache(): Maybe<CacheLike> {
 }
 
 /**
+ * Cache API へ載せる用の応答を作る。
+ *
+ * Workers の fetch 応答はヘッダーが immutable なので、clone() した応答へ
+ * 直接 set すると "Can't modify immutable headers" で落ちる。ヘッダーだけ
+ * 作り直した別の Response を組む。
+ */
+export function withCacheControl(response: Response, ttlSeconds: number): Response {
+  const cloned: Response = response.clone();
+  const stored: Response = new Response(cloned.body, {
+    headers: new Headers(cloned.headers),
+    status: cloned.status,
+    statusText: cloned.statusText,
+  });
+  stored.headers.set("cache-control", `public, max-age=${String(ttlSeconds)}`);
+  return stored;
+}
+
+/**
  * 合成キー（GET）で応答をキャッシュする。GraphQL は POST のため
  * 元の Request では Cache API へ載せられない。
  */
@@ -41,9 +59,7 @@ export async function withCache(
   }
   const fresh: Result<Response, unknown> = await loader();
   if (fresh.isOk && cache.isJust && fresh.value.ok) {
-    const stored: Response = fresh.value.clone();
-    stored.headers.set("cache-control", `public, max-age=${String(ttlSeconds)}`);
-    await asyncResult(cache.value.put(cacheKey, stored));
+    await asyncResult(cache.value.put(cacheKey, withCacheControl(fresh.value, ttlSeconds)));
   }
   return fresh;
 }
