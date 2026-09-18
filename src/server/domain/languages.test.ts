@@ -34,7 +34,6 @@ describe("aggregateLanguages", () => {
         ["Rust", 100, "#dea584"],
       ]),
     ]);
-    expect(data.totalBytes).toBe(500);
     expect(data.items[0]).toEqual({
       bytes: 400,
       color: "#3178c6",
@@ -47,6 +46,5 @@ describe("aggregateLanguages", () => {
   test("言語が無ければ空を返す", () => {
     const data = aggregateLanguages([repoOf("empty", [])]);
     expect(data.items).toEqual([]);
-    expect(data.totalBytes).toBe(0);
   });
 });

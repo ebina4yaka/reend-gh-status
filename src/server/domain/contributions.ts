@@ -20,14 +20,17 @@ function toLevel(name: string): ContributionLevel {
 
 type Weeks = ContributionsCollectionPayload["contributionCalendar"]["weeks"];
 
+/** 1 日分を表示用の形へ写す（草の描画とストリーク計算で共用）。 */
+function toDay(day: ContributionDayPayload): ContributionDay {
+  return {
+    count: day.contributionCount,
+    date: day.date,
+    level: toLevel(day.contributionLevel),
+  };
+}
+
 function flattenDays(weeks: Weeks): ContributionDay[] {
-  return weeks.flatMap((week) =>
-    week.contributionDays.map((day: ContributionDayPayload): ContributionDay => ({
-      count: day.contributionCount,
-      date: day.date,
-      level: toLevel(day.contributionLevel),
-    })),
-  );
+  return weeks.flatMap((week) => week.contributionDays.map(toDay));
 }
 
 interface CurrentStreakAcc {
@@ -93,12 +96,6 @@ export function toContributionsData(collection: ContributionsCollectionPayload):
     lastContributedOn: current.last,
     longestStreak: longestStreak(days),
     totalContributions: collection.contributionCalendar.totalContributions,
-    weeks: collection.contributionCalendar.weeks.map((week) =>
-      week.contributionDays.map((day) => ({
-        count: day.contributionCount,
-        date: day.date,
-        level: toLevel(day.contributionLevel),
-      })),
-    ),
+    weeks: collection.contributionCalendar.weeks.map((week) => week.contributionDays.map(toDay)),
   };
 }

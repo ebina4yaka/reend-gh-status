@@ -43,7 +43,7 @@ mock.module("@/lib/api", () => ({
 mock.module("@tanstack/react-router", () => ({
   createFileRoute:
     () =>
-    (options: object): object =>
+    (options: Record<string, unknown>): Record<string, unknown> =>
       options,
 }));
 
@@ -80,7 +80,26 @@ function renderAllPages(): void {
   }
 }
 
+const CARD_TITLES: readonly string[] = [
+  "OPERATOR STATUS",
+  "LANGUAGE MATRIX",
+  "CONTRIBUTION TRACE",
+  "ACTIVITY STREAM",
+  "REPOSITORY ARCHIVE",
+];
+
 describe("全ページの描画", () => {
+  test("概要ページは統計値・ログイン名・5 種のカードを表示する", async () => {
+    mockState.snapshot = fixtureSnapshot();
+    const view: RenderResult = renderWithQuery(createElement(OverviewPage));
+    expect(await view.findByText("The Octocat")).toBeDefined();
+    expect(await view.findByText("12,480")).toBeDefined();
+    expect(await view.findByText("TARGET::octocat")).toBeDefined();
+    for (const title of CARD_TITLES) {
+      expect(view.getByText(title)).toBeDefined();
+    }
+  });
+
   test("空データでも落ちない", () => {
     mockState.snapshot = emptySnapshot();
     renderAllPages();

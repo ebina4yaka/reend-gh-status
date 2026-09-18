@@ -70,7 +70,6 @@ export function fixtureSnapshot(): GithubSnapshot {
         { bytes: 61_300, color: "#e34c26", name: "HTML", percent: 6.9 },
         { bytes: 42_000, color: "#563d7c", name: "CSS", percent: 4.7 },
       ],
-      totalBytes: 889_000,
     },
     repos: {
       items: [
@@ -123,11 +122,9 @@ export function fixtureSnapshot(): GithubSnapshot {
     stats: {
       commits: 4821,
       followers: 123,
-      following: 45,
-      identity: { avatarUrl: "", login: "octocat", name: "The Octocat" },
+      identity: { login: "octocat", name: "The Octocat" },
       issues: 210,
       mergedPullRequests: 340,
-      pullRequests: 402,
       rank: { grade: "A+", percentile: 8.4 },
       repositories: 57,
       stars: 12_480,

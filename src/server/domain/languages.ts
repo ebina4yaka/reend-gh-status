@@ -33,5 +33,5 @@ export function aggregateLanguages(repos: readonly RepoNodePayload[]): TopLangsD
       percent: totalBytes === 0 ? 0 : (entry.bytes / totalBytes) * 100,
     }))
     .toSorted((left, right) => right.bytes - left.bytes);
-  return { items, totalBytes };
+  return { items };
 }

@@ -12,7 +12,6 @@ export function graphqlPayloadFixture(): object {
   return {
     data: {
       user: {
-        avatarUrl: "https://avatars.example/u",
         contributionsCollection: {
           contributionCalendar: {
             totalContributions: 42,
@@ -23,12 +22,8 @@ export function graphqlPayloadFixture(): object {
           },
           restrictedContributionsCount: 5,
           totalCommitContributions: 120,
-          totalIssueContributions: 3,
-          totalPullRequestContributions: 9,
-          totalPullRequestReviewContributions: 2,
         },
         followers: { totalCount: 12 },
-        following: { totalCount: 4 },
         issues: { totalCount: 30 },
         login: "octocat",
         mergedPullRequests: { totalCount: 8 },

@@ -9,9 +9,7 @@ query Core($login: String!, $from: DateTime!, $to: DateTime!) {
   user(login: $login) {
     login
     name
-    avatarUrl
     followers { totalCount }
-    following { totalCount }
     repositories(first: 100, ownerAffiliations: OWNER, isFork: false, orderBy: { field: STARGAZERS, direction: DESC }) {
       totalCount
       nodes {
@@ -30,9 +28,6 @@ query Core($login: String!, $from: DateTime!, $to: DateTime!) {
     contributionsCollection(from: $from, to: $to) {
       totalCommitContributions
       restrictedContributionsCount
-      totalPullRequestContributions
-      totalIssueContributions
-      totalPullRequestReviewContributions
       contributionCalendar {
         totalContributions
         weeks {

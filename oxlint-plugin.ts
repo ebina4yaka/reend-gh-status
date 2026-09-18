@@ -2,8 +2,11 @@
  * Project-specific rules as an ESLint-compatible oxlint JS plugin.
  * Loaded via "jsPlugins" in .oxlintrc.json; rules are referenced as "project/<name>":
  * project/ban-switch, project/ban-let, project/require-const-type-annotation,
- * project/ban-try-catch, project/no-fetch, project/ban-eden-fetch,
- * project/no-use-effect, project/cognitive-complexity.
+ * project/ban-try-catch, project/no-fetch.
+ *
+ * Eden Fetch の禁止、useEffect の禁止、型アサーションの禁止、複雑度の上限は
+ * oxlint 組み込みルール（no-restricted-imports / consistent-type-assertions /
+ * complexity）で表現できるため、oxlint.config.ts 側に置く。
  */
 
 interface ReportContext {
@@ -143,29 +146,6 @@ const noFetch: {
   },
 };
 
-const banEdenFetch: {
-  create: (context: ReportContext) => {
-    ImportDeclaration: (node: { source: { value: string } }) => void;
-  };
-  meta: { docs: { description: string } };
-} = {
-  create: (
-    context: ReportContext,
-  ): { ImportDeclaration: (node: { source: { value: string } }) => void } => ({
-    ImportDeclaration: (node: { source: { value: string } }): void => {
-      if (node.source.value.startsWith("@elysiajs/eden/fetch")) {
-        context.report({
-          message: "Eden Fetch is banned. Use Eden Treaty (treaty<App> from @elysiajs/eden).",
-          node,
-        });
-      }
-    },
-  }),
-  meta: {
-    docs: { description: "Eden Fetch is banned. Use Eden Treaty instead." },
-  },
-};
-
 const banTryCatch: {
   create: (context: ReportContext) => { TryStatement: (node: unknown) => void };
   meta: { docs: { description: string } };
@@ -181,285 +161,6 @@ const banTryCatch: {
   }),
   meta: {
     docs: { description: "try/catch is banned. Use true-myth Result instead." },
-  },
-};
-
-interface UseEffectCallee {
-  type: string;
-  name?: string;
-}
-
-const noUseEffect: {
-  create: (context: ReportContext) => {
-    CallExpression: (node: { callee: UseEffectCallee }) => void;
-  };
-  meta: { docs: { description: string } };
-} = {
-  create: (
-    context: ReportContext,
-  ): { CallExpression: (node: { callee: UseEffectCallee }) => void } => ({
-    CallExpression: (node: { callee: UseEffectCallee }): void => {
-      const { callee } = node;
-      if (callee.type === "Identifier" && callee.name === "useEffect") {
-        context.report({
-          message:
-            "useEffect is discouraged. Derive values during render or handle them in event handlers (react.dev/learn/you-might-not-need-an-effect). Synchronizing with external systems (e.g. URL.revokeObjectURL cleanup) is a legitimate exception — disable this rule for that line.",
-          node,
-        });
-      }
-    },
-  }),
-  meta: {
-    docs: {
-      description:
-        "useEffect is discouraged; derive during render or handle in event handlers. External-system sync is a legitimate exception (disable per line).",
-    },
-  },
-};
-
-// Ponytail: threshold is a constant (edit here), not a rule option —
-// Oxlint JS-plugin option plumbing isn't worth it for one number.
-const MAX_COGNITIVE_COMPLEXITY: number = 15;
-
-interface AstNode {
-  type?: string;
-  operator?: string;
-  [key: string]: unknown;
-}
-
-function isAstNode(value: unknown): boolean {
-  return Boolean(value) && typeof value === "object" && typeof (value as AstNode).type === "string";
-}
-
-function childNodes(node: unknown): AstNode[] {
-  const out: AstNode[] = [];
-  for (const value of Object.values(node as Record<string, unknown>)) {
-    for (const item of Array.isArray(value) ? value : [value]) {
-      if (isAstNode(item)) {
-        out.push(item as AstNode);
-      }
-    }
-  }
-  return out;
-}
-
-function isFunctionNode(node: AstNode): boolean {
-  const type: string = node.type ?? "";
-  return (
-    type === "FunctionDeclaration" ||
-    type === "FunctionExpression" ||
-    type === "ArrowFunctionExpression"
-  );
-}
-
-function isLoopNode(node: AstNode): boolean {
-  const type: string = node.type ?? "";
-  return (
-    type === "ForStatement" ||
-    type === "ForInStatement" ||
-    type === "ForOfStatement" ||
-    type === "WhileStatement" ||
-    type === "DoWhileStatement"
-  );
-}
-
-/** Sonar-style cognitive complexity of a function body, excluding nested
- * functions (they are scored separately). Increments: +1 per if/loop/switch/
- * catch/ternary plus +1 per nesting level (`else if` counts once); +1 per
- * `&&`/`||` sequence and again on operator change.
- * ponytail: `seen` guards against cyclic parent references in the
- * oxlint-provided AST; `""` is the "no previous operator" sentinel because
- * this file bans `undefined`. */
-function scoreFunctionBody(body: AstNode): number {
-  const seen: WeakSet<object> = new WeakSet<object>();
-  function enter(node: AstNode): boolean {
-    if (seen.has(node)) {
-      return false;
-    }
-    seen.add(node);
-    return true;
-  }
-
-  function scoreOf(node: AstNode, nesting: number, prevLogicalOp: string): number {
-    if (!enter(node)) {
-      return 0;
-    }
-    if (isFunctionNode(node)) {
-      return 0;
-    }
-    if (node.type === "IfStatement") {
-      return ifScore(node, nesting);
-    }
-    if (isLoopNode(node)) {
-      return loopScore(node, nesting);
-    }
-    if (node.type === "SwitchStatement") {
-      return switchScore(node, nesting);
-    }
-    if (node.type === "CatchClause") {
-      return 1 + nesting + scoreOf(node.body as AstNode, nesting + 1, "");
-    }
-    if (node.type === "ConditionalExpression") {
-      return ternaryScore(node, nesting);
-    }
-    if (node.type === "LogicalExpression") {
-      const op: string = node.operator ?? "";
-      const increment: number = op === prevLogicalOp ? 0 : 1 + nesting;
-      return (
-        increment +
-        scoreOf(node.left as AstNode, nesting, op) +
-        scoreOf(node.right as AstNode, nesting, op)
-      );
-    }
-    return childNodes(node).reduce(
-      (sum: number, child: AstNode) => sum + scoreOf(child, nesting, ""),
-      0,
-    );
-  }
-
-  function ifScore(node: AstNode, nesting: number): number {
-    // `else if` chains count once each without an extra nesting penalty.
-    const alternate: AstNode | "" = node.alternate as AstNode | "";
-    const elseScore: number = alternate
-      ? scoreOf(alternate, alternate.type === "IfStatement" ? nesting : nesting + 1, "")
-      : 0;
-    return (
-      1 +
-      nesting +
-      scoreOf(node.test as AstNode, nesting, "") +
-      scoreOf(node.consequent as AstNode, nesting + 1, "") +
-      elseScore
-    );
-  }
-
-  function loopScore(node: AstNode, nesting: number): number {
-    return (
-      1 +
-      nesting +
-      childNodes(node).reduce(
-        (sum: number, child: AstNode) =>
-          sum + scoreOf(child, child === node.body ? nesting + 1 : nesting, ""),
-        0,
-      )
-    );
-  }
-
-  function switchScore(node: AstNode, nesting: number): number {
-    return (
-      1 +
-      nesting +
-      (node.cases as AstNode[]).reduce(
-        (sum: number, clause: AstNode) =>
-          sum +
-          ((clause.consequent ?? []) as AstNode[]).reduce(
-            (inner: number, stmt: AstNode) => inner + scoreOf(stmt, nesting + 1, ""),
-            0,
-          ),
-        0,
-      )
-    );
-  }
-
-  function ternaryScore(node: AstNode, nesting: number): number {
-    return (
-      1 +
-      nesting +
-      scoreOf(node.test as AstNode, nesting, "") +
-      scoreOf(node.consequent as AstNode, nesting + 1, "") +
-      scoreOf(node.alternate as AstNode, nesting + 1, "")
-    );
-  }
-
-  return scoreOf(body, 0, "");
-}
-
-const cognitiveComplexityRule: {
-  create: (context: ReportContext) => {
-    FunctionDeclaration: (node: unknown) => void;
-    FunctionExpression: (node: unknown) => void;
-    ArrowFunctionExpression: (node: unknown) => void;
-  };
-  meta: { docs: { description: string } };
-} = {
-  create: (context: ReportContext) => {
-    function check(node: unknown): void {
-      const fn: AstNode & { id?: { name?: string }; body?: unknown } = node as AstNode & {
-        id?: { name?: string };
-        body?: unknown;
-      };
-      if (!fn.body || typeof fn.body !== "object") {
-        return;
-      }
-      const score: number = scoreFunctionBody(fn.body as AstNode);
-      if (score > MAX_COGNITIVE_COMPLEXITY) {
-        context.report({
-          message: `Function${fn.id?.name ? ` '${fn.id.name}'` : ""} has a cognitive complexity of ${score} (max ${MAX_COGNITIVE_COMPLEXITY}). Extract smaller functions.`,
-          node,
-        });
-      }
-    }
-    return {
-      ArrowFunctionExpression: check,
-      FunctionDeclaration: check,
-      FunctionExpression: check,
-    };
-  },
-  meta: {
-    docs: {
-      description:
-        "Flags functions whose Sonar-style cognitive complexity exceeds the limit; refactor into smaller named functions.",
-    },
-  },
-};
-
-interface TypeAssertionAnnotation {
-  type?: string;
-  typeName?: { name?: string } | unknown;
-}
-
-interface TypeAssertionNode {
-  type?: string;
-  typeAnnotation?: TypeAssertionAnnotation;
-}
-
-const banTypeAssertion: {
-  create: (context: ReportContext) => {
-    TSAsExpression: (node: TypeAssertionNode) => void;
-    TSTypeAssertion: (node: unknown) => void;
-  };
-  meta: { docs: { description: string } };
-} = {
-  create: (context: ReportContext) => ({
-    TSAsExpression: (node: TypeAssertionNode): void => {
-      const ta: TypeAssertionAnnotation = node.typeAnnotation ?? {};
-      const typeName: unknown = ta.typeName;
-      const name: string =
-        typeName && typeof typeName === "object" && "name" in typeName
-          ? ((typeName as { name?: string }).name ?? "")
-          : "";
-      // `as const` is a const assertion, not a type assertion — permit it.
-      if (ta.type === "TSTypeReference" && name === "const") {
-        return;
-      }
-      context.report({
-        message:
-          "Type assertion (`x as T`) is banned. Narrow with a type guard, or assert the value with valibot/Result, instead of casting.",
-        node,
-      });
-    },
-    TSTypeAssertion: (node: unknown): void => {
-      context.report({
-        message:
-          "Type assertion (`<T>x`) is banned. Narrow with a type guard, or assert the value with valibot/Result, instead of casting.",
-        node,
-      });
-    },
-  }),
-  meta: {
-    docs: {
-      description:
-        "Bans TypeScript type assertions (`x as T` and `<T>x`). `as const` is permitted.",
-    },
   },
 };
 
@@ -530,14 +231,10 @@ const noVoidReturn: {
 export default {
   meta: { name: "project" },
   rules: {
-    "ban-eden-fetch": banEdenFetch,
     "ban-let": banLet,
     "ban-switch": banSwitch,
     "ban-try-catch": banTryCatch,
-    "ban-type-assertion": banTypeAssertion,
-    "cognitive-complexity": cognitiveComplexityRule,
     "no-fetch": noFetch,
-    "no-use-effect": noUseEffect,
     "no-void-return": noVoidReturn,
     "require-const-type-annotation": requireConstTypeAnnotation,
   },

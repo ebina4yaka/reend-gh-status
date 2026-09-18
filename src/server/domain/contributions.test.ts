@@ -19,9 +19,6 @@ function collectionOf(weekCounts: readonly (readonly number[])[]): Contributions
     },
     restrictedContributionsCount: 0,
     totalCommitContributions: 10,
-    totalIssueContributions: 0,
-    totalPullRequestContributions: 0,
-    totalPullRequestReviewContributions: 0,
   };
 }
 

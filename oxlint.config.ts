@@ -20,10 +20,10 @@ export default defineConfig({
       },
     },
     {
-      // ルール定義ファイル自身は AST 内省のため副作用専用の void 関数が多い。
+      // ルール定義ファイル自身は AST 内省のため `as` でノードを窄める。
       files: ["oxlint-plugin.ts"],
       rules: {
-        "project/ban-type-assertion": "off",
+        "typescript/consistent-type-assertions": "off",
         "project/no-void-return": "off",
       },
     },
@@ -42,26 +42,19 @@ export default defineConfig({
         "project/no-fetch": "off",
         // Server parses untrusted external payloads (GitHub GraphQL/REST);
         // narrowing `unknown` to a domain type needs `as`, which the ban forbids.
-        "project/ban-type-assertion": "off",
+        "typescript/consistent-type-assertions": "off",
         // Express 専用ルール（Express は rejected promise を自動処理しない）。
         // 本プロジェクトのサーバーは Elysia で、全ルートハンドラが async なため無効化。
         "oxc/no-async-endpoint-handlers": "off",
       },
     },
     {
-      // Comment-extraction scanner is inherently imperative (char-by-char scan
-      // with loop indices and multi-state skipping); forcing it into the
-      // declarative style would obscure the tokenizer logic.
+      // Textlint の linter を使い回すため 1 ファイルずつ await する。
+      // await の結果に型注釈を付けると ReturnType の入れ子になって読めない。
       files: ["scripts/lint-comments.ts"],
       rules: {
-        "project/ban-let": "off",
-        "id-length": "off",
-        "no-continue": "off",
-        "func-style": "off",
-        "project/cognitive-complexity": "off",
-        // 型注釈の一貫性よりもスキャナの見通しを優先（認証境界等ではない）。
-        "project/require-const-type-annotation": "off",
         "eslint/no-await-in-loop": "off",
+        "project/require-const-type-annotation": "off",
       },
     },
     {
@@ -87,7 +80,7 @@ export default defineConfig({
       // テストの afterEach / cleanup は値を返さないのが自然なため void 戻り値も許可する。
       files: ["**/*.test.ts", "**/*.test.tsx"],
       rules: {
-        "project/ban-type-assertion": "off",
+        "typescript/consistent-type-assertions": "off",
         "project/no-void-return": "off",
       },
     },
@@ -95,14 +88,36 @@ export default defineConfig({
   plugins: ["typescript", "unicorn", "oxc", "react"],
   rules: {
     "project/ban-switch": "error",
-    "project/cognitive-complexity": "error",
     "project/ban-try-catch": "error",
     "project/ban-let": "error",
     "project/no-fetch": "error",
-    "project/ban-eden-fetch": "error",
-    "project/ban-type-assertion": "error",
-    "project/no-use-effect": "error",
     "project/no-void-return": "error",
+
+    // 認知的複雑度の代わりに McCabe 循環的複雑度で上限を設ける。
+    // switch 1 個を 1 と数える modified を使う（case 数に比例させない）。
+    complexity: ["error", { max: 15, variant: "modified" }],
+
+    // Eden Fetch の禁止と useEffect の禁止は import の制限で足りる
+    // （useEffect はプロジェクト内で import していない）。
+    "no-restricted-imports": [
+      "error",
+      {
+        patterns: [
+          {
+            group: ["@elysiajs/eden/fetch*"],
+            message: "Eden Fetch is banned. Use Eden Treaty (treaty<App> from @elysiajs/eden).",
+          },
+          {
+            group: ["react"],
+            importNames: ["useEffect"],
+            message:
+              "useEffect is discouraged. Derive values during render or handle them in event handlers. Synchronizing with external systems is a legitimate exception.",
+          },
+        ],
+      },
+    ],
+    // `x as T` と `<T>x` を禁止する。`as const` は const アサーションなので通る。
+    "typescript/consistent-type-assertions": ["error", { assertionStyle: "never" }],
 
     "react/rules-of-hooks": "error",
     "react/exhaustive-deps": "error",

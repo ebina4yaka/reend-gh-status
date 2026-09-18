@@ -4,7 +4,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { type ReactElement, createElement } from "react";
 
 import { resetMocks as resetApiMocks } from "./mocks/api";
-import { resetMocks as resetRouterMocks } from "./mocks/react-router";
 import "../src/index.css";
 
 /**
@@ -12,7 +11,7 @@ import "../src/index.css";
  * useQuery はデータそのもの、useInfiniteQuery は { pages, pageParams } 形状。
  */
 export interface QuerySeed {
-  readonly data: object;
+  readonly data: Record<string, unknown>;
   readonly key: readonly unknown[];
 }
 
@@ -32,8 +31,7 @@ function withProviders(Story: StoryFn, context: StoryContext): ReactElement {
 
 const preview: Preview = {
   beforeEach: (): void => {
-    // ストーリー間でモック状態（API シナリオ・ルートパラメータ）をリセット。
-    resetRouterMocks();
+    // ストーリー間で API のモック状態をリセット。
     resetApiMocks();
   },
   decorators: [

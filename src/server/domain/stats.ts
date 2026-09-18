@@ -17,15 +17,12 @@ export function toStatsData(user: GithubUserPayload, includePrivate: boolean): S
   return {
     commits,
     followers: user.followers.totalCount,
-    following: user.following.totalCount,
     identity: {
-      avatarUrl: user.avatarUrl,
       login: user.login,
       name: user.name,
     },
     issues,
     mergedPullRequests,
-    pullRequests: user.contributionsCollection.totalPullRequestContributions,
     rank: computeRank({ commits, issues, pullRequests: mergedPullRequests, stars }),
     repositories: user.repositories.totalCount,
     stars,

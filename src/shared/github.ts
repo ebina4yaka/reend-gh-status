@@ -6,7 +6,6 @@
  */
 
 interface GithubIdentity {
-  readonly avatarUrl: string;
   readonly login: string;
   readonly name: string;
 }
@@ -21,11 +20,9 @@ export interface RankScore {
 export interface StatsData {
   readonly commits: number;
   readonly followers: number;
-  readonly following: number;
   readonly identity: GithubIdentity;
   readonly issues: number;
   readonly mergedPullRequests: number;
-  readonly pullRequests: number;
   readonly rank: RankScore;
   readonly repositories: number;
   readonly stars: number;
@@ -41,7 +38,6 @@ export interface LanguageStat {
 
 export interface TopLangsData {
   readonly items: readonly LanguageStat[];
-  readonly totalBytes: number;
 }
 
 /** GitHub の草の濃さ（0=none, 1..4）。 */
@@ -121,16 +117,14 @@ export function emptySnapshot(): GithubSnapshot {
       totalContributions: 0,
       weeks: [],
     },
-    languages: { items: [], totalBytes: 0 },
+    languages: { items: [] },
     repos: { items: [] },
     stats: {
       commits: 0,
       followers: 0,
-      following: 0,
-      identity: { avatarUrl: "", login: "", name: "" },
+      identity: { login: "", name: "" },
       issues: 0,
       mergedPullRequests: 0,
-      pullRequests: 0,
       rank: { grade: "C", percentile: 100 },
       repositories: 0,
       stars: 0,

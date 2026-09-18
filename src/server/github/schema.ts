@@ -50,9 +50,6 @@ const ContributionsCollectionSchema = valibot.object({
   }),
   restrictedContributionsCount: valibot.nullish(valibot.number(), 0),
   totalCommitContributions: valibot.number(),
-  totalIssueContributions: valibot.number(),
-  totalPullRequestContributions: valibot.number(),
-  totalPullRequestReviewContributions: valibot.number(),
 });
 
 export type ContributionsCollectionPayload = valibot.InferOutput<
@@ -62,10 +59,8 @@ export type ContributionsCollectionPayload = valibot.InferOutput<
 const CountSchema = valibot.object({ totalCount: valibot.number() });
 
 const GithubUserSchema = valibot.object({
-  avatarUrl: valibot.nullish(valibot.string(), ""),
   contributionsCollection: ContributionsCollectionSchema,
   followers: CountSchema,
-  following: CountSchema,
   issues: CountSchema,
   login: valibot.string(),
   mergedPullRequests: CountSchema,

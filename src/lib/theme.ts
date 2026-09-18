@@ -1,11 +1,11 @@
-import { useAtom, useAtomValue } from "jotai";
+import { useAtom } from "jotai";
 import { atomWithStorage } from "jotai/utils";
 import { useLayoutEffect } from "react";
 
 export type ThemeMode = "system" | "light" | "dark";
 
 /** メインカラー。"" はテーマ既定色（未カスタマイズ）。 */
-interface ThemeState {
+export interface ThemeState {
   mode: ThemeMode;
   primary: string;
 }
@@ -16,7 +16,7 @@ const DEFAULT_STATE: ThemeState = { mode: "system", primary: "" };
 // LocalStorage へ自動永続化される jotai atom。
 const themeStateAtom = atomWithStorage<ThemeState>(STORAGE_KEY, DEFAULT_STATE);
 
-export function isValidHex(value: unknown): value is string {
+function isValidHex(value: unknown): value is string {
   return typeof value === "string" && /^#[0-9a-f]{6}$/i.test(value);
 }
 
@@ -27,18 +27,14 @@ function useValidatedTheme(): {
   setState: (update: Partial<ThemeState>) => ThemeState;
 } {
   const [state, rawSetState] = useAtom(themeStateAtom);
-  // 更新後の状態を返す（妥当性検証は呼び出し側の getter と同じく読み出し時に行う）。
+  // 更新後の状態を返す（妥当性検証は読み出し時に sanitizeTheme が行う）。
   function setState(update: Partial<ThemeState>): ThemeState {
     const next: ThemeState = { ...state, ...update };
     rawSetState(next);
     return next;
   }
   return {
-    mode:
-      state.mode === "light" || state.mode === "dark" || state.mode === "system"
-        ? state.mode
-        : "system",
-    primary: isValidHex(state.primary) ? state.primary : "",
+    ...sanitizeTheme(state),
     setState,
   };
 }
@@ -73,7 +69,7 @@ function hueOf(red: number, green: number, blue: number): number {
 }
 
 /** #rrggbb → HSL 三つ組文字列（reend-components の --primary 形式）。 */
-export function hexToHslTriplet(hex: string): string {
+function hexToHslTriplet(hex: string): string {
   const red: number = parseInt(hex.slice(1, 3), 16) / 255;
   const green: number = parseInt(hex.slice(3, 5), 16) / 255;
   const blue: number = parseInt(hex.slice(5, 7), 16) / 255;
@@ -97,10 +93,43 @@ function srgbChannel(hex: string, channelIndex: number): number {
 }
 
 /** 相対輝度が暗い色なら白文字、明るい色なら黒文字（WCAG 系のおおまかな判定）。 */
-export function foregroundFor(hex: string): string {
+function foregroundFor(hex: string): string {
   const luminance: number =
     0.2126 * srgbChannel(hex, 0) + 0.7152 * srgbChannel(hex, 1) + 0.0722 * srgbChannel(hex, 2);
   return luminance > 0.35 ? "0 0% 10%" : "0 0% 98%";
+}
+
+/** 保存値の妥当性を検証し、壊れていれば既定値へ寄せる。 */
+function sanitizeTheme(state: ThemeState): ThemeState {
+  return {
+    mode:
+      state.mode === "light" || state.mode === "dark" || state.mode === "system"
+        ? state.mode
+        : "system",
+    primary: isValidHex(state.primary) ? state.primary : "",
+  };
+}
+
+/**
+ * テーマ状態を <html> へ適用し、実際に適用した状態を返す。
+ * 起動時（theme-init.ts）と React レンダー後の両方から呼ぶ。
+ */
+export function applyThemeToDocument(state: ThemeState): ThemeState {
+  const applied: ThemeState = sanitizeTheme(state);
+  const dark: boolean =
+    applied.mode === "dark" ||
+    (applied.mode === "system" && globalThis.matchMedia("(prefers-color-scheme: dark)").matches);
+  const root: HTMLElement = document.documentElement;
+  root.classList.toggle("light", !dark);
+  root.classList.toggle("dark", dark);
+  if (applied.primary === "") {
+    root.style.removeProperty("--primary");
+    root.style.removeProperty("--primary-foreground");
+  } else {
+    root.style.setProperty("--primary", hexToHslTriplet(applied.primary));
+    root.style.setProperty("--primary-foreground", foregroundFor(applied.primary));
+  }
+  return applied;
 }
 
 /**
@@ -109,27 +138,13 @@ export function foregroundFor(hex: string): string {
  * 適用対象の状態を返す。
  */
 export function useApplyTheme(): ThemeState {
-  const { mode, primary } = useAtomValue(themeStateAtom);
+  const { mode, primary } = useValidatedTheme();
   useLayoutEffect(() => {
-    const root: HTMLElement = document.documentElement;
-    const media: MediaQueryList = globalThis.matchMedia("(prefers-color-scheme: dark)");
-    // 適用結果が dark かどうかを返す。
-    function apply(): boolean {
-      const dark: boolean =
-        mode === "dark" ||
-        (mode === "system" && globalThis.matchMedia("(prefers-color-scheme: dark)").matches);
-      root.classList.toggle("light", !dark);
-      root.classList.toggle("dark", dark);
-      if (isValidHex(primary)) {
-        root.style.setProperty("--primary", hexToHslTriplet(primary));
-        root.style.setProperty("--primary-foreground", foregroundFor(primary));
-      } else {
-        root.style.removeProperty("--primary");
-        root.style.removeProperty("--primary-foreground");
-      }
-      return dark;
+    function apply(): ThemeState {
+      return applyThemeToDocument({ mode, primary });
     }
     apply();
+    const media: MediaQueryList = globalThis.matchMedia("(prefers-color-scheme: dark)");
     media.addEventListener("change", apply);
     // oxlint-disable-next-line project/no-void-return -- React の Destructor 型は cleanup の void 返しを要求する
     return (): void => media.removeEventListener("change", apply);

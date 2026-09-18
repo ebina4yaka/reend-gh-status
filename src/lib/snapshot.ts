@@ -10,10 +10,6 @@ export interface SnapshotResult {
   readonly snapshot: GithubSnapshot;
 }
 
-function extractMessage(error: unknown): string {
-  return error instanceof Error ? error.message : "GitHub のデータを取得できませんでした。";
-}
-
 /**
  * ダッシュボードのデータ取得。サーバー側で 10 分キャッシュされるため、
  * 画面遷移のたびの再取得はしない。
@@ -27,7 +23,7 @@ export function useSnapshot(): UseQueryResult<SnapshotResult> {
         throw new Error(`API ${String(response.error.status)}`);
       }
       if (response.data.status === "error") {
-        throw new Error(extractMessage(new Error(response.data.message)));
+        throw new Error(response.data.message);
       }
       return { fetchedAt: response.data.fetchedAt, snapshot: response.data.data };
     },

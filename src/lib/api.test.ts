@@ -1,5 +1,7 @@
 import { afterEach, describe, expect, test } from "bun:test";
 
+import { fixtureSnapshot } from "@/server/github/fixture";
+
 import { api } from "./api";
 
 /**
@@ -14,7 +16,7 @@ afterEach((): void => {
   globalThis.fetch = originalFetch;
 });
 
-function stubJson(body: object): void {
+function stubJson(body: Record<string, unknown>): void {
   globalThis.fetch = ((): Promise<Response> =>
     Promise.resolve(Response.json(body))) as unknown as typeof fetch;
 }
@@ -22,44 +24,7 @@ function stubJson(body: object): void {
 describe("api client", () => {
   test("日付は Date ではなく ISO 文字列で届く", async () => {
     stubJson({
-      data: {
-        activity: { items: [] },
-        contributions: {
-          currentStreak: 0,
-          lastContributedOn: "2026-09-17",
-          longestStreak: 0,
-          totalContributions: 0,
-          weeks: [],
-        },
-        languages: { items: [], totalBytes: 0 },
-        repos: {
-          items: [
-            {
-              description: "",
-              forks: 0,
-              isArchived: false,
-              language: "",
-              languageColor: "",
-              name: "repo",
-              pushedAt: "2026-01-01T00:00:00.000Z",
-              stars: 0,
-              url: "https://github.com/octocat/repo",
-            },
-          ],
-        },
-        stats: {
-          commits: 0,
-          followers: 0,
-          following: 0,
-          identity: { avatarUrl: "", login: "octocat", name: "" },
-          issues: 0,
-          mergedPullRequests: 0,
-          pullRequests: 0,
-          rank: { grade: "C", percentile: 100 },
-          repositories: 0,
-          stars: 0,
-        },
-      },
+      data: fixtureSnapshot(),
       fetchedAt: "2026-09-18T00:00:00.000Z",
       status: "ok",
     });
