@@ -15,9 +15,9 @@ run_worker_first = ["/api/*", "/card/*"]
 
 [vars]
 # 表示対象のログイン名。固定運用（他人のアカウントは引けない）。
-GITHUB_USERNAME = ""
+GITHUB_USERNAME = "ebina4yaka"
 # 非公開リポジトリのコントリビューションを合計に含めるか。
-INCLUDE_PRIVATE = "false"
+INCLUDE_PRIVATE = "true"
 
 # Secrets（wrangler secret put で設定する）:
 #   wrangler secret put GITHUB_TOKEN   # GitHub PAT（read:user）
