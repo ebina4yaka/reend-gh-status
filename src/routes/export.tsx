@@ -183,7 +183,7 @@ function ExportControls(props: ExportControlsProps): ReactElement {
   );
 }
 
-function ExportPage(): ReactElement {
+export function ExportPage(): ReactElement {
   const { accent, setAccent } = useCardAccent();
   const [type, setType] = useState<CardType>("stats");
   const origin: string = globalThis.location?.origin ?? "https://your-worker.workers.dev";

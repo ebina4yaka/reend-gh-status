@@ -4,7 +4,10 @@
  */
 import { GlobalRegistrator } from "@happy-dom/global-registrator";
 
-GlobalRegistrator.register();
+// 複数のテストファイルが同じプロセスで動くため、二重登録を避ける。
+if (!GlobalRegistrator.isRegistered) {
+  GlobalRegistrator.register();
+}
 
 import { afterEach, describe, expect, mock, test } from "bun:test";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";

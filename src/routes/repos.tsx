@@ -66,7 +66,7 @@ const COLUMNS: readonly TacticalTableColumn<RepoRow>[] = [
   },
 ];
 
-function ReposPage(): ReactElement {
+export function ReposPage(): ReactElement {
   const [sortKey, setSortKey] = useState<keyof RepoRow & string>("stars");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
   return (

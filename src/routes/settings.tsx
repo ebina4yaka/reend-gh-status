@@ -13,7 +13,7 @@ const MODES: readonly { readonly label: string; readonly value: ThemeMode }[] = 
   { label: "LIGHT", value: "light" },
 ];
 
-function SettingsPage(): ReactElement {
+export function SettingsPage(): ReactElement {
   const { mode, setMode } = useTheme();
   const { accent, setAccent } = useCardAccent();
   return (

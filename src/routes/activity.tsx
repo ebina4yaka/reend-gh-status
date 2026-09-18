@@ -32,7 +32,7 @@ function toTimelineItem(item: ActivityItem): TimelineItemProps {
   };
 }
 
-function ActivityPage(): ReactElement {
+export function ActivityPage(): ReactElement {
   return (
     <SnapshotGate>
       {({ snapshot }) => (
