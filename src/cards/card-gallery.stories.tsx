@@ -38,7 +38,8 @@ function CardGallery(props: GalleryProps): ReactElement {
       }}
     >
       <StatsCard caption={CAPTION} data={snapshot.stats} tokens={tokens} />
-      <TopLangsCard caption={CAPTION} data={snapshot.languages} tokens={tokens} />
+      <TopLangsCard caption={CAPTION} data={snapshot.languages} layout="donut" tokens={tokens} />
+      <TopLangsCard caption={CAPTION} data={snapshot.languages} layout="bars" tokens={tokens} />
       <ContributionsCard caption={CAPTION} data={snapshot.contributions} tokens={tokens} />
       <ActivityCard caption={CAPTION} data={snapshot.activity} tokens={tokens} />
       <ReposCard caption={CAPTION} data={snapshot.repos} tokens={tokens} />
@@ -75,7 +76,8 @@ export const EmptyData: Story = {
     return (
       <div style={{ display: "flex", flexWrap: "wrap", gap: 16, padding: 24 }}>
         <StatsCard caption={CAPTION} data={empty.stats} tokens={tokens} />
-        <TopLangsCard caption={CAPTION} data={empty.languages} tokens={tokens} />
+        <TopLangsCard caption={CAPTION} data={empty.languages} layout="donut" tokens={tokens} />
+        <TopLangsCard caption={CAPTION} data={empty.languages} layout="bars" tokens={tokens} />
         <ContributionsCard caption={CAPTION} data={empty.contributions} tokens={tokens} />
         <ActivityCard caption={CAPTION} data={empty.activity} tokens={tokens} />
         <ReposCard caption={CAPTION} data={empty.repos} tokens={tokens} />

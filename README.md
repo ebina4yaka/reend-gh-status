@@ -56,7 +56,7 @@ src/
 </picture>
 ```
 
-`/export` ページが URL とタグを生成するので、コピーして貼るだけでよい。カード種別は `stats`、`top-langs`、`contributions`、`activity`、`repos` の 5 つ。
+`/export` ページが URL とタグを生成するので、コピーして貼るだけでよい。カード種別は `stats`、`top-langs`、`contributions`、`activity`、`repos` の 5 つ。`top-langs` は `layout=donut`（既定）と `layout=bars` を切り替えられる。
 
 ## コマンド
 

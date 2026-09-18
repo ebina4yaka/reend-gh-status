@@ -62,6 +62,7 @@ export function OverviewPage(): ReactElement {
                 <div className={slot.span} key={slot.type}>
                   <CardPreview
                     caption={formatSyncCaption(fetchedAt)}
+                    layout="donut"
                     snapshot={snapshot}
                     tokens={tokens}
                     type={slot.type}

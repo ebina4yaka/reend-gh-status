@@ -7,11 +7,12 @@ import { ReposCard } from "@/cards/repos-card";
 import { StatsCard } from "@/cards/stats-card";
 import { TopLangsCard } from "@/cards/top-langs-card";
 import type { CardTokens } from "@/cards/tokens";
-import type { CardType } from "@/shared/cards";
+import type { CardLayout, CardType } from "@/shared/cards";
 import type { GithubSnapshot } from "@/shared/github";
 
 export interface BuildCardOptions {
   readonly caption: string;
+  readonly layout: CardLayout;
   readonly snapshot: GithubSnapshot;
   readonly tokens: CardTokens;
   readonly type: CardType;
@@ -19,11 +20,11 @@ export interface BuildCardOptions {
 
 /** カード種別から satori へ渡す要素を組み立てる。 */
 export function buildCard(options: BuildCardOptions): ReactElement {
-  const { caption, snapshot, tokens, type } = options;
+  const { caption, layout, snapshot, tokens, type } = options;
   return match(type)
     .with("stats", () => <StatsCard caption={caption} data={snapshot.stats} tokens={tokens} />)
     .with("top-langs", () => (
-      <TopLangsCard caption={caption} data={snapshot.languages} tokens={tokens} />
+      <TopLangsCard caption={caption} data={snapshot.languages} layout={layout} tokens={tokens} />
     ))
     .with("contributions", () => (
       <ContributionsCard caption={caption} data={snapshot.contributions} tokens={tokens} />

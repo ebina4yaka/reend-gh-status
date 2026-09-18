@@ -27,14 +27,3 @@ export function formatDate(iso: string): string {
 export function formatSyncCaption(iso: string): string {
   return `SYNC ${iso.slice(0, 10)} ${iso.slice(11, 16)}`;
 }
-
-/** バイト数を KB / MB 表記にする。 */
-export function formatBytes(value: number): string {
-  if (value >= 1_000_000) {
-    return `${(value / 1_000_000).toFixed(1)} MB`;
-  }
-  if (value >= 1000) {
-    return `${(value / 1000).toFixed(1)} KB`;
-  }
-  return `${String(value)} B`;
-}

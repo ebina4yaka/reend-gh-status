@@ -31,10 +31,16 @@ export function normalizeCardType(raw: string): string {
   return raw.endsWith(".svg") ? raw.slice(0, -".svg".length) : raw;
 }
 
+export type CardLayout = "bars" | "donut";
+
 export const CardQuerySchema = valibot.object({
   accent: valibot.optional(
     valibot.picklist(["yellow", "blue", "cyan"] satisfies readonly CardAccentName[]),
     "yellow",
+  ),
+  layout: valibot.optional(
+    valibot.picklist(["bars", "donut"] satisfies readonly CardLayout[]),
+    "donut",
   ),
   theme: valibot.optional(
     valibot.picklist(["dark", "light"] satisfies readonly CardThemeName[]),

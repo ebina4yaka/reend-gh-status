@@ -13,7 +13,13 @@ import { CardPreview } from "@/components/card-preview";
 import { SnapshotGate } from "@/components/snapshot-gate";
 import { CARD_ACCENTS, useCardAccent, useResolvedCardTheme } from "@/lib/card-style";
 import { formatSyncCaption } from "@/lib/format";
-import { CARD_LABELS, CARD_TYPES, type CardType, isCardType } from "@/shared/cards";
+import {
+  CARD_LABELS,
+  CARD_TYPES,
+  type CardLayout,
+  type CardType,
+  isCardType,
+} from "@/shared/cards";
 import type { GithubSnapshot } from "@/shared/github";
 
 export const Route = createFileRoute("/export")({ component: ExportPage });
@@ -21,9 +27,11 @@ export const Route = createFileRoute("/export")({ component: ExportPage });
 type ThemeChoice = "auto" | CardThemeName;
 
 const THEME_CHOICES: readonly ThemeChoice[] = ["auto", "dark", "light"];
+const LAYOUT_CHOICES: readonly CardLayout[] = ["donut", "bars"];
 
 interface CardUrlOptions {
   readonly accent: CardAccentName;
+  readonly layout: CardLayout;
   readonly origin: string;
   readonly theme: CardThemeName;
   readonly type: CardType;
@@ -31,7 +39,7 @@ interface CardUrlOptions {
 
 /** README に貼るカード URL を組み立てる。 */
 function cardUrl(options: CardUrlOptions): string {
-  return `${options.origin}/card/${options.type}?theme=${options.theme}&accent=${options.accent}`;
+  return `${options.origin}/card/${options.type}?theme=${options.theme}&accent=${options.accent}&layout=${options.layout}`;
 }
 
 /** 単体の Markdown 画像。 */
@@ -42,6 +50,7 @@ function markdownOf(url: string, label: string): string {
 interface PictureMarkdownOptions {
   readonly accent: CardAccentName;
   readonly label: string;
+  readonly layout: CardLayout;
   readonly origin: string;
   readonly type: CardType;
 }
@@ -97,6 +106,8 @@ function downloadPng(options: PngDownloadOptions): boolean {
 
 interface ExportControlsProps {
   readonly accent: CardAccentName;
+  readonly layout: CardLayout;
+  readonly onLayoutChange: (layout: CardLayout) => void;
   readonly origin: string;
   readonly snapshot: GithubSnapshot;
   readonly type: CardType;
@@ -110,10 +121,12 @@ function ExportControls(props: ExportControlsProps): ReactElement {
   const size: CardSize = CARD_SIZES[props.type] ?? { height: 220 };
   const url: string = cardUrl({
     accent: props.accent,
+    layout: props.layout,
     origin: props.origin,
     theme,
     type: props.type,
   });
+  const showLayout: boolean = props.type === "top-langs";
   const label: string = `${props.snapshot.stats.identity.login} ${CARD_LABELS[props.type]}`;
   return (
     <div className="flex flex-col gap-4">
@@ -130,10 +143,24 @@ function ExportControls(props: ExportControlsProps): ReactElement {
             {value.toUpperCase()}
           </Button>
         ))}
+        {showLayout &&
+          LAYOUT_CHOICES.map((value) => (
+            <Button
+              key={value}
+              onClick={() => {
+                props.onLayoutChange(value);
+              }}
+              size="sm"
+              variant={value === props.layout ? "primary" : "ghost"}
+            >
+              {value.toUpperCase()}
+            </Button>
+          ))}
       </div>
       <Card className="p-4">
         <CardPreview
           caption={formatSyncCaption(new Date().toISOString())}
+          layout={props.layout}
           snapshot={props.snapshot}
           tokens={tokens}
           type={props.type}
@@ -145,6 +172,7 @@ function ExportControls(props: ExportControlsProps): ReactElement {
           text={pictureMarkdown({
             accent: props.accent,
             label,
+            layout: props.layout,
             origin: props.origin,
             type: props.type,
           })}
@@ -186,6 +214,7 @@ function ExportControls(props: ExportControlsProps): ReactElement {
 export function ExportPage(): ReactElement {
   const { accent, setAccent } = useCardAccent();
   const [type, setType] = useState<CardType>("stats");
+  const [layout, setLayout] = useState<CardLayout>("donut");
   const origin: string = globalThis.location?.origin ?? "https://your-worker.workers.dev";
   return (
     <SnapshotGate>
@@ -223,7 +252,14 @@ export function ExportPage(): ReactElement {
               ))}
             </div>
           </div>
-          <ExportControls accent={accent} origin={origin} snapshot={snapshot} type={type} />
+          <ExportControls
+            accent={accent}
+            layout={layout}
+            onLayoutChange={setLayout}
+            origin={origin}
+            snapshot={snapshot}
+            type={type}
+          />
         </div>
       )}
     </SnapshotGate>

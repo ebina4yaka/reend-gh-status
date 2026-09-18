@@ -87,27 +87,6 @@ export function Metric(props: {
   );
 }
 
-/** 横棒グラフ。 */
-export function Bar(props: {
-  readonly percent: number;
-  readonly tokens: CardTokens;
-  readonly tone?: string;
-}): ReactElement {
-  const width: string = `${Math.max(0, Math.min(100, props.percent))}%`;
-  return (
-    <div
-      style={{
-        background: color(props.tokens.border, 0.1),
-        display: "flex",
-        height: 6,
-        width: "100%",
-      }}
-    >
-      <div style={{ background: color(props.tone ?? props.tokens.accent), width }} />
-    </div>
-  );
-}
-
 /** ランク表示（グレード + 上位 %）。 */
 export function RankBadge(props: {
   readonly grade: string;

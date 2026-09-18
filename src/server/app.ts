@@ -83,6 +83,7 @@ export function createApp() {
         const svg: Result<string, string> = await renderSvg(
           buildCard({
             caption: formatSyncCaption(new Date().toISOString()),
+            layout: parsed.output.layout,
             snapshot: loaded.value,
             tokens,
             type,
