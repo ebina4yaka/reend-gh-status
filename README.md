@@ -1,4 +1,4 @@
-# gh-reend-status
+# reend-gh-status
 
 HUD 風の GitHub 統計ツール。ダッシュボードと README 埋め込み用 SVG カードを同じコードベースで提供する。
 

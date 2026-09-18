@@ -1,4 +1,4 @@
-name = "gh-reend-status"
+name = "reend-gh-status"
 main = "src/server/worker.ts"
 compatibility_date = "2025-06-01"
 compatibility_flags = ["nodejs_compat"]

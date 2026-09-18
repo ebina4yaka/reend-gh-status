@@ -10,7 +10,7 @@ import { useTheme } from "./theme";
 
 export const CARD_ACCENTS: readonly CardAccentName[] = ["yellow", "blue", "cyan"];
 
-const accentAtom = atomWithStorage<CardAccentName>("gh-reend-status.accent", "yellow");
+const accentAtom = atomWithStorage<CardAccentName>("reend-gh-status.accent", "yellow");
 
 export function useCardAccent(): {
   readonly accent: CardAccentName;

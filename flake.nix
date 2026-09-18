@@ -1,5 +1,5 @@
 {
-  description = "gh-reend-status — HUD-styled GitHub statistics terminal (Bun + Elysia + Cloudflare Workers)";
+  description = "reend-gh-status — HUD-styled GitHub statistics terminal (Bun + Elysia + Cloudflare Workers)";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
@@ -27,7 +27,7 @@
         bun-bin = pkgs.bun-bin.latest;
       in
       {
-        packages.default = pkgs.runCommand "gh-reend-status-toolchain" {
+        packages.default = pkgs.runCommand "reend-gh-status-toolchain" {
           nativeBuildInputs = [ pkgs.makeWrapper ];
         } ''
           mkdir -p "$out/bin"
@@ -44,7 +44,7 @@
             pkgs.openssl # openssl rand -hex 32 などの生成用
           ];
           shellHook = ''
-            echo "gh-reend-status dev shell: bun $(bun --version)"
+            echo "reend-gh-status dev shell: bun $(bun --version)"
             [ -d node_modules ] || echo "run 'bun install' first"
             git config core.hooksPath .githooks
           '';

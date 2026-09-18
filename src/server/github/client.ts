@@ -92,12 +92,12 @@ function authHeaders(token: Maybe<string>): Record<string, string> {
     Just: (value): Record<string, string> => ({
       Accept: "application/vnd.github+json",
       Authorization: `Bearer ${value}`,
-      "User-Agent": "gh-reend-status",
+      "User-Agent": "reend-gh-status",
       "X-GitHub-Api-Version": "2022-11-28",
     }),
     Nothing: (): Record<string, string> => ({
       Accept: "application/vnd.github+json",
-      "User-Agent": "gh-reend-status",
+      "User-Agent": "reend-gh-status",
       "X-GitHub-Api-Version": "2022-11-28",
     }),
   });
