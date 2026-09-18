@@ -1,5 +1,3 @@
-// Satori より先に評価させる（satori の評価時に harfbuzzjs が location を読む）。
-import "./emscripten-location";
 import { type ReactElement } from "react";
 import { type Maybe, Result, Unit } from "true-myth";
 import satori, { type Font, init } from "satori/standalone";

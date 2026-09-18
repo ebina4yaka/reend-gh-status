@@ -3,6 +3,12 @@ main = "src/server/worker.ts"
 compatibility_date = "2025-06-01"
 compatibility_flags = ["nodejs_compat"]
 
+# satori は harfbuzzjs をそのまま import する。本家は hb.wasm を自分で探して
+# 読む（node は fs、ブラウザは fetch）が workerd ではどちらも使えないため、
+# 同梱の wasm を渡す差し替えモジュールへ向ける。
+[alias]
+harfbuzzjs = "./src/server/svg/harfbuzzjs.ts"
+
 [assets]
 directory = "dist"
 binding = "ASSETS"
